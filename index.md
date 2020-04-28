@@ -1,3 +1,6 @@
+---
+permalink: /index.html
+---
 ![alt text](https://solariabiodata.com.mx/images/solaria_banner.png "Soluciones de Siguiente Generación")
 # Seminario Online de R "WebinR"
 
