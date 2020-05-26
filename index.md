@@ -2,7 +2,7 @@
 permalink: /index.html
 ---
 ![alt text](https://solariabiodata.com.mx/images/solaria_banner.png "Soluciones de Siguiente Generación")
-# Seminario Online de R "WebinR"
+# Seminario Online de R "WebinR-2"
 
 
 ### Descripción
@@ -15,144 +15,103 @@ Para poder realizar este ejercicio, necesitaremos:
 1. Datos de Ejemplo:
     - Puedes usar tus propios datos siguiente algunas recomendaciones de este tutorial
     - O puedes usar los datos del respositorio
-    - O puedes descargalos desde [https://datos.gob.mx/busca/dataset/informacion-referente-a-casos-covid-19-en-mexico]
+    - O puedes descargalos desde [asignacion_taxonomica.tsv]
 2. Sofware Recomendable para esta sesión:
     - Terminal (Mac o Linux)
     - RStudio (Windows)
 
 ## Carga de datos y manejo básico
 
-### Datos consultados el 27 de Abril de 2020
+### Definición del nombre de archivo
+> No olvides también indicar la ruta completa de tu sistema de archivos
 ~~~
-    input = "200427COVID19MEXICO.csv"
-~~~
-### Catálogos, también consultables del mismo link, pero adaptados para carga más sencilla
-~~~
-    cat_comorbilidades = "data_covid19/cat_comorbilidad.csv"
-~~~
-~~~
-    cat_resultado = "data_covid19/cat_resultado.csv"
-~~~
-~~~
-    cat_entidad = "data_covid19/cat_entidad.csv"
-~~~
-~~~
-    cat_municipio = "data_covid19/cat_municipio.csv"
+    input = "asignacion_taxonomica.tsv"
 ~~~
 
 ### Este será el dataframe principal que usaremos en el ejercicio
-    cov = fread(file)
+~~~    
+    dat = read.table(input,sep="\t",header=T)
+~~~
+### Exploración de la estructura del dataframe
+Nombres de las columnas del DF
+~~~
+    colnames(dat)
+~~~
+Dimensiones (número de filas y columnas)
+~~~
+    dim(dat)
+~~~
+Revisión de la estructura de objeto
+~~~
+    str(dat)
+~~~
+Visualización de primeros elementos del objeto
+~~~
+head(dat)
+~~~
+### Definición de Funciones Personalizadas
+Aquí crearemos una función que nos ayudará a separar valores de un string de taxonomía
+~~~
+    transform_taxonomy <- function(x){
+        tax = x$taxonomy %>% str_split(pattern=";",n=6,simplify=TRUE)
+        out = cbind(x,tax)
+        return(out)
+    }
+~~~
+Para usar la función, debemos ejecutarla como
+~~~
+    comp = transform_taxonomy(dat)
+~~~
 
-### Dataframes de catálogos
-~~~
-    df_comorbilidad = fread(cat_comorbilidad)
-~~~
-~~~
-    df_resultado = fread(cat_resultado)
-~~~
-~~~
-    df_entidad = fread(cat_entidad)
-~~~
-~~~
-    df_municipio = fread(cat_municipio)
-~~~
-### Visualización rápida del DF principal
-~~~
-    cov %>% head()
-~~~
-### Estructura del DF
-~~~
-  str(cov)
-~~~
-### Dimensiones del DF
-~~~
-  dim(cov)
-~~~
-### Nombres de columnas del DF
-~~~
-  colnames(cov)
-~~~
-### Nacionalidades en el DF
-~~~
-  cov$PAIS_NACIONALIDAD %>% unique()
-~~~
-### Resultados de Diagnóstico
-~~~
-  cov$RESULTADO
-~~~
-### Mapeo de Valores respecto al catálogo
-~~~
-  cov$RESULTADO = mapvalues(cov$RESULTADO,from=df_resultado$CLAVE,to=resultado$DESCRIPCIÓN)
-~~~
-### Nuevamente, vemos resultados de Diagnóstico
-~~~
-  cov$RESULTADO
-~~~
-### Crearemos una función para mapear algunas comorbilidades
-~~~
-    mapea_comorbilidades <- function(x){
-      res = mapvalues(x,from,df_comorbilidad$CLAVE,to=df_comorbilidad$DESCRIPCIÓN)
-      return(res)
-      }
-~~~
-### Y posteriormente usamos la función para mapear ---
-~~~
-    cov$HIPERTENSION = mapea_comorbilidades(cov$HIPERTENSION)
-~~~
-~~~
-    cov$DIABETES = mapea_comorbilidades(cov$DIABETES)
-~~~
-~~~
-    cov$TABAQUISMO = mapea_comorbilidades(cov$TABAQUISMO)
-~~~
-### ¿Cómo podriamos mapear las entidades y municipios?
-    # De tarea ...
 
-### Podemos seleccionar algunas columnas a partir del DF principal
-~~~
-    cov %>% select(FECHA_SINTOMAS,ENTIDAD_RES,RESULTADO,EDAD,HIPERTENSION,DIABETES,TABAQUISMO)
-~~~
-### Podemos filtrar dependiendo de algunos valores
-~~~
-    cov %>% filter(RESULTADO == "POSITIVO")
-~~~
-~~~
-    cov %>% filter(EDAD > 20) %>% filter(EDAD<65)
-~~~
-~~~
-    cov %>% filter(EDAD > 20)
-~~~
-## Ploteo de gráficos
- Usaremos algunas estrategias de visualización con ggplot2
+Probaremos cómo resulta esta función y si puede ser utilizada en más casos
 
-### Curva Epidemiológica de casos por día
-Esta es la curva que se presenta, de casos acumulados a lo largo de esta contingencia
+### Análisis de Datos
+Reemplazo de valores nulos
 ~~~
-    ggplot(cov, aes(x=FECHA_SINTOMAS,fill=RESULTADO) ) + geom_bar()
+    comp = replace(comp,is.na(comp),0)
 ~~~
-### Mapa de calor de presencia en estados por edad
- Esta gráfica presenta la diferencia entre entidades por edad
+Revisión de columnas género, familia, orden, clase
 ~~~
-    ggplot(cov, aes(x=ENTIDAD_RES,y=RESULTADO,fill=EDAD) ) + geom_raster()
+comp$class %>% unique()
+comp$order %>% unique()
+comp$family %>% unique()
+comp$genus %>% unique()
 ~~~
-### Contribución de comorbilidades
-Aqui podemos ver la diferencia en áreas respecto al intervalo de edades
+Conteo de cada nivel taxonómico
 ~~~
-    cov %>% filter(EDAD<=100) %>% ggplot(aes(x=DIABETES,y=EDAD,fill=RESULTADO)) + geom_violin
+comp %>% count(order)
 ~~~
-### Resolución de casos positivos/negativos respecto al tiempo
-En esta curva es visible la progresión del diagnóstico, así como los casos pendientes
+Transformando a data.frame
 ~~~
-    cov %>% filter(EDAD<=75) %>% ggplot(aes(x=FECHA_SINTOMAS,y=EDAD,fill=RESULTADO)) + geom_boxplot()
+comp %>% count(order) %>% as.data.frame()
 ~~~
-### Decoradores
- No olvides que en la presentación de gráficos podemos usar los siguienters decoradores:
+Ordenando numéricamente
 ~~~
-    labs(x=“eje x”,y=“eje y”)
+comp %>% count(order) %>% as.data.frame() %>% arrange(n)
+~~~
+Orden descendiente
+~~~
+comp %>% count(order) %>% as.data.frame() %>% arrange(desc(n))
+~~~
+Guardando en un objeto nuevo
+~~~
+comp %>% count(order) %>% as.data.frame() %>% arrange(desc(n)) -> tax_order_resume
+~~~
+
+### Filtro
+Crearemos una tabla de resumen en nivel de familia
+~~~
+comp %>% count(family) %>% as.data.frame() %>% arrange(desc(n)) -> tax_family_resume
+~~~
+Filtrar por valores que no serán informativos (a la tabla comp)
+~~~
+comp %>% filter(family!="Other")
 ~~~
 ~~~
-    ggtitle(“Título”)
+comp %>% filter(family!="Other") %>% filter(family!="f__unidentified") -> comp
 ~~~
+### Agrupación
 ~~~
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+comp %>% group_by(family) %>% summarise(sum=sum(sample_1,sample_2,sample_3))
 ~~~
