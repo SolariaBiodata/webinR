@@ -14,8 +14,8 @@ Para poder realizar este ejercicio, necesitaremos:
 
 1. Datos de Ejemplo:
     - Puedes usar tus propios datos siguiente algunas recomendaciones de este tutorial
-    - O puedes usar los datos del respositorio
-    - O puedes descargalos desde [asignacion_taxonomica.tsv]
+    - O puedes usar los datos de asignación taxonómica transformados a formato BIOM
+    - O puedes descargalos desde [asignacion_taxonomica.tsv](asignacion_taxonomica.tsv)
 2. Sofware Recomendable para esta sesión:
     - Terminal (Mac o Linux)
     - RStudio (Windows)
