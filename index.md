@@ -54,6 +54,7 @@ Aquí crearemos una función que nos ayudará a separar valores de un string de 
 ~~~
     transform_taxonomy <- function(x){
         tax = x$taxonomy %>% str_split(pattern=";",n=6,simplify=TRUE)
+        colnames(tax) = c("kingdom","phylum","class","order","family","genus")
         out = cbind(x,tax)
         return(out)
     }
